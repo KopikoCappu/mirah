@@ -5,9 +5,12 @@
 # It handles the cloud side. Your keys (Google sign-in, Jev) are entered afterwards in the browser, at /setup.
 # Safe to re-run: every step skips what already exists, and secrets in .env.local are kept,
 # so stored inbox tokens stay readable.
-set -euo pipefail
+set -Eeuo pipefail
 
 cd "$(dirname "$0")/.."
+
+# Never stop silently: say where it failed and that re-running picks up where it left off.
+trap 'printf "\n\033[31mSetup stopped unexpectedly (line %s). Nothing is lost: run  bash scripts/setup.sh  again to continue.\033[0m\n" "$LINENO" >&2' ERR
 
 bold() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 note() { printf '  %s\n' "$*"; }
@@ -57,6 +60,7 @@ bold "Mirah setup"
 note "This creates your own private copy of Mirah: its database, server and secrets."
 note "Then you'll finish in the browser: Google sign-in and your Jev key."
 note "When a question shows a value in [brackets], press Enter to accept it."
+note "Wait for each question before typing; anything typed early is ignored."
 
 # ---------- Where it runs ----------
 bold "1. Where will Mirah run?"
@@ -75,17 +79,13 @@ fi
 
 # ---------- Google Cloud project + Firestore ----------
 bold "2. Google Cloud project"
-# Default to the last run's project: .env.local if it got that far, else gcloud's current project if this script made it.
-DEFAULT_PROJECT=$(existing GOOGLE_CLOUD_PROJECT)
-if [ -z "$DEFAULT_PROJECT" ]; then
-  CURRENT=$(gcloud config get project 2>/dev/null || true)
-  if [ -n "$CURRENT" ] && [ "$(gcloud projects describe "$CURRENT" --format='value(name)' 2>/dev/null)" = "Mirah" ]; then
-    DEFAULT_PROJECT="$CURRENT"
-  fi
-fi
+# Only suggest a project an earlier run in this same folder chose (saved to .env.local right below).
 note "A new ID makes a new project, e.g. mirah-yourname-123. Must be unique across all of Google Cloud."
-ask PROJECT "Project ID" "$DEFAULT_PROJECT" "$RE_PROJECT" \
+ask PROJECT "Project ID" "$(existing GOOGLE_CLOUD_PROJECT)" "$RE_PROJECT" \
   "6–30 characters: lowercase letters, numbers and dashes, starting with a letter."
+if ! grep -q "^GOOGLE_CLOUD_PROJECT=" .env.local 2>/dev/null; then
+  echo "GOOGLE_CLOUD_PROJECT=$PROJECT" >>.env.local
+fi
 if ! gcloud projects describe "$PROJECT" >/dev/null 2>&1; then
   note "Creating project $PROJECT..."
   # gcloud prints harmless advice here (environment tags, component updates); show output only on failure.
@@ -173,8 +173,15 @@ if [ "$TARGET" = 1 ]; then
     SA="mirah-app@$PROJECT.iam.gserviceaccount.com"
     gcloud iam service-accounts describe "$SA" >/dev/null 2>&1 ||
       gcloud iam service-accounts create mirah-app --display-name="Mirah app" >/dev/null 2>&1
-    gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA" \
-      --role=roles/datastore.user --condition=None >/dev/null 2>&1
+    # A brand-new service account takes a few seconds to become visible to IAM, so retry the grant.
+    for attempt in 1 2 3 4 5 6; do
+      if OUT=$(gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA" \
+        --role=roles/datastore.user --condition=None 2>&1); then
+        break
+      fi
+      [ "$attempt" -lt 6 ] || { echo "$OUT"; die "Couldn't give Mirah access to its database."; }
+      sleep 5
+    done
     KEY_FILE=$(mktemp)
     gcloud iam service-accounts keys create "$KEY_FILE" --iam-account="$SA" >/dev/null 2>&1 ||
       die "Couldn't create a database key. Some Google accounts (work/school) block this; use the Cloud Run option instead."
