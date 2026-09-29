@@ -1,6 +1,6 @@
 # Setting up Mirah
 
-**The quick way:** run `bash scripts/setup.sh`. It does everything below and walks you through the one manual step, the OAuth client.
+**The quick way:** run `bash scripts/setup.sh`. On Windows, run it in **Git Bash** (Start menu → Git Bash), not PowerShell. It does everything below and walks you through the one manual step, the OAuth client.
 This page is the manual version, and it's useful for troubleshooting.
 
 About 30–45 minutes, done once. Everything stays inside Google Cloud's free tier at personal volume.

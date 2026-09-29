@@ -40,6 +40,7 @@ command -v node >/dev/null || die "node isn't installed. Get it from https://nod
 
 bold "Mirah setup"
 note "This sets up your own private copy: your database, your Google sign-in, your Jev key."
+note "When a question shows a value in [brackets], press Enter to accept it."
 note "Nothing is shared with anyone else's Mirah."
 
 # ---------- Where it runs ----------
@@ -49,18 +50,34 @@ note "2) Cloud Run   (Google Cloud; free tier)"
 note "3) Only on this computer for now"
 ask TARGET "Choose 1, 2 or 3" "1"
 case "$TARGET" in 1 | 2 | 3) ;; *) die "Please choose 1, 2 or 3." ;; esac
+# Check tools now, not halfway through.
+[ "$TARGET" != 1 ] || command -v vercel >/dev/null || die "The Vercel option needs the Vercel CLI. Run: npm i -g vercel  then run this script again."
 
 # ---------- Google Cloud project + Firestore ----------
 bold "2. Google Cloud project"
 if ! gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | grep -q .; then
   gcloud auth login
 fi
-ask PROJECT "Project ID (created if it doesn't exist; must be globally unique)" "$(existing GOOGLE_CLOUD_PROJECT)"
+# Default to the last run's project: .env.local if it got that far, else gcloud's current project if this script made it.
+DEFAULT_PROJECT=$(existing GOOGLE_CLOUD_PROJECT)
+if [ -z "$DEFAULT_PROJECT" ]; then
+  CURRENT=$(gcloud config get project 2>/dev/null || true)
+  if [ -n "$CURRENT" ] && [ "$(gcloud projects describe "$CURRENT" --format='value(name)' 2>/dev/null)" = "Mirah" ]; then
+    DEFAULT_PROJECT="$CURRENT"
+  fi
+fi
+note "A new ID makes a new project, e.g. mirah-yourname-123. Must be unique across all of Google Cloud."
+ask PROJECT "Project ID" "$DEFAULT_PROJECT"
 [ -n "$PROJECT" ] || die "A project ID is required."
 if ! gcloud projects describe "$PROJECT" >/dev/null 2>&1; then
-  gcloud projects create "$PROJECT" --name="Mirah"
+  note "Creating project $PROJECT..."
+  # gcloud prints harmless advice here (environment tags, component updates); show output only on failure.
+  if ! OUT=$(gcloud projects create "$PROJECT" --name="Mirah" 2>&1); then
+    echo "$OUT"
+    die "Couldn't create $PROJECT. If the ID is taken, pick another."
+  fi
 fi
-gcloud config set project "$PROJECT" >/dev/null
+gcloud config set project "$PROJECT" >/dev/null 2>&1
 
 APIS="firestore.googleapis.com gmail.googleapis.com"
 if [ "$TARGET" = 2 ]; then
@@ -72,11 +89,20 @@ if [ "$TARGET" = 2 ]; then
 fi
 note "Enabling APIs (takes a minute)..."
 # shellcheck disable=SC2086
-gcloud services enable $APIS
+if ! OUT=$(gcloud services enable $APIS 2>&1); then
+  echo "$OUT"
+  die "Couldn't enable the Google Cloud APIs."
+fi
 
-ask REGION "Region" "us-central1"
-if ! gcloud firestore databases describe --database='(default)' >/dev/null 2>&1; then
-  gcloud firestore databases create --location="$REGION"
+if gcloud firestore databases describe --database='(default)' >/dev/null 2>&1; then
+  REGION=$(gcloud firestore databases describe --database='(default)' --format='value(locationId)')
+  note "Database already exists in $REGION."
+else
+  note "Where your database lives. Press Enter for the default; it can't be changed later."
+  ask REGION "Region" "us-central1"
+  note "Creating database..."
+  gcloud firestore databases create --location="$REGION" >/dev/null 2>&1 ||
+    die "Couldn't create the database. Run: gcloud firestore databases create --location=$REGION  to see why."
 fi
 gcloud firestore indexes composite create --collection-group=emails \
   --field-config=field-path=bucket,order=ascending \
@@ -86,8 +112,8 @@ gcloud firestore indexes composite create --collection-group=emails \
 # ---------- App URL ----------
 APP_URL=""
 if [ "$TARGET" = 1 ]; then
-  command -v vercel >/dev/null || die "Install the Vercel CLI first: npm i -g vercel"
   bold "3. Vercel project"
+  note "Choose to create a NEW project (don't link an existing one)."
   [ -f .vercel/project.json ] || vercel link
   VERCEL_NAME=$(node -e "process.stdout.write(require('./.vercel/project.json').projectName||'')")
   ask APP_URL "Production URL" "https://$VERCEL_NAME.vercel.app"
