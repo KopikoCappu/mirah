@@ -8,16 +8,16 @@ const globalForDb = globalThis as unknown as { firestore?: Firestore };
  * Elsewhere (Vercel) they come from a service account key in GOOGLE_SERVICE_ACCOUNT_JSON.
  */
 function credentials() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
   if (!raw) return undefined;
-  const key = JSON.parse(raw.trim().startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8"));
+  const key = JSON.parse(raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8"));
   return { client_email: key.client_email as string, private_key: key.private_key as string };
 }
 
 export const db =
   globalForDb.firestore ??
   new Firestore({
-    projectId: process.env.GOOGLE_CLOUD_PROJECT || undefined,
+    projectId: process.env.GOOGLE_CLOUD_PROJECT?.trim() || undefined,
     credentials: credentials(),
     ignoreUndefinedProperties: true,
   });

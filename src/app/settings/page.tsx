@@ -1,5 +1,6 @@
+import Link from "next/link";
+import { hasMicrosoft } from "@/lib/config";
 import { listAccounts } from "@/lib/db";
-import { env } from "@/lib/env";
 import { listLearnedSenders } from "@/lib/senders";
 import { getSettings } from "@/lib/settings";
 import { requireUser } from "@/lib/session";
@@ -12,8 +13,13 @@ export const maxDuration = 300;
 
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
   const user = await requireUser();
-  const { error, connected, saved } = await searchParams;
-  const [accounts, settings, learned] = await Promise.all([listAccounts(), getSettings(), listLearnedSenders()]);
+  const { error, connected, saved, welcome } = await searchParams;
+  const [accounts, settings, learned, outlook] = await Promise.all([
+    listAccounts(),
+    getSettings(),
+    listLearnedSenders(),
+    hasMicrosoft(),
+  ]);
 
   return (
     <>
@@ -25,7 +31,14 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       </div>
 
       {error && <p className="alert">{String(error)}</p>}
-      {connected && <p className="notice">Connected {String(connected)}.</p>}
+      {welcome && connected ? (
+        <p className="notice">
+          You&apos;re all set, and {String(connected)} is connected. Try <b>Sort past mail</b> below to see how Mirah
+          sorts your last two weeks.
+        </p>
+      ) : (
+        connected && <p className="notice">Connected {String(connected)}.</p>
+      )}
       {saved && <p className="notice">Settings saved.</p>}
 
       <section className="panel">
@@ -66,12 +79,14 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           <a className="button" href="/api/auth/google/start?mode=gmail">
             + Gmail
           </a>
-          {env.hasMicrosoft ? (
+          {outlook ? (
             <a className="button" href="/api/auth/microsoft/start">
               + Outlook
             </a>
           ) : (
-            <span className="subtle small">Outlook isn&apos;t set up yet.</span>
+            <Link className="subtle small" href="/setup">
+              Set up Outlook
+            </Link>
           )}
         </div>
       </section>
@@ -199,7 +214,9 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       </form>
 
       <section className="panel row spread">
-        <span className="subtle small">Signed in as {user}</span>
+        <span className="subtle small">
+          Signed in as {user} · <Link href="/setup">Keys &amp; access</Link>
+        </span>
         <form action={logout}>
           <SubmitButton className="chip-btn">Sign out</SubmitButton>
         </form>

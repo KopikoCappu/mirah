@@ -1,6 +1,6 @@
+import { claimOwner, getConfig, hasSetupKey, isUnclaimed } from "@/lib/config";
 import { encrypt, hashId } from "@/lib/crypto";
 import { accountsCol } from "@/lib/db";
-import { env } from "@/lib/env";
 import { GMAIL_SCOPE, googleExchangeCode } from "@/lib/oauth";
 import { consumeOAuthState, redirectTo } from "@/lib/oauth-state";
 import { createSession, currentUser } from "@/lib/session";
@@ -10,18 +10,29 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const mode = await consumeOAuthState(params.get("state"));
   const code = params.get("code");
-  if (!mode || !code) return redirectTo("/login", { error: params.get("error") ?? "Sign-in expired, try again" });
+  const home = mode === "setup" ? "/setup" : "/login";
+  if (!mode || !code) return redirectTo(home, { error: params.get("error") ?? "Sign-in expired, try again" });
 
   try {
     const { email, refreshToken, scope } = await googleExchangeCode(code);
 
-    if (mode === "login") {
-      if (!env.allowedEmails.includes(email)) return redirectTo("/login", { error: `${email} is not allowed` });
+    if (mode === "setup") {
+      // Checked again here: the setup key is only good until someone owns this copy.
+      if (!(await hasSetupKey()) || !(await isUnclaimed()) || !(await claimOwner(email))) {
+        return redirectTo("/login", { error: "This Mirah already has an owner. Sign in with that account." });
+      }
+      await createSession(email);
+    } else if (mode === "login") {
+      if (!(await getConfig()).allowedEmails.includes(email)) {
+        return redirectTo("/login", { error: `${email} is not allowed` });
+      }
       await createSession(email);
       return redirectTo("/");
+    } else if (!(await currentUser())) {
+      return redirectTo("/login");
     }
 
-    if (!(await currentUser())) return redirectTo("/login");
+    // Connecting Gmail, either from Settings or as the last step of setup.
     if (!scope.includes(GMAIL_SCOPE)) {
       return redirectTo("/settings", { error: "Gmail access wasn't granted. Tick the Gmail checkbox when connecting." });
     }
@@ -37,8 +48,8 @@ export async function GET(request: Request) {
     const existing = await accountsCol().doc(id).get();
     if (!existing.exists) Object.assign(account, { cursor: null, createdAt: Date.now() });
     await accountsCol().doc(id).set(account, { merge: true });
-    return redirectTo("/settings", { connected: email });
+    return redirectTo("/settings", mode === "setup" ? { connected: email, welcome: "1" } : { connected: email });
   } catch (err) {
-    return redirectTo(mode === "login" ? "/login" : "/settings", { error: (err as Error).message.slice(0, 200) });
+    return redirectTo(mode === "gmail" ? "/settings" : home, { error: (err as Error).message.slice(0, 200) });
   }
 }

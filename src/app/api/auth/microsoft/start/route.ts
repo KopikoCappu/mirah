@@ -4,5 +4,9 @@ import { currentUser } from "@/lib/session";
 
 export async function GET() {
   if (!(await currentUser())) return redirectTo("/login");
-  return redirectTo(msAuthUrl(await newOAuthState("outlook")));
+  try {
+    return redirectTo(await msAuthUrl(await newOAuthState("outlook")));
+  } catch (err) {
+    return redirectTo("/settings", { error: (err as Error).message });
+  }
 }

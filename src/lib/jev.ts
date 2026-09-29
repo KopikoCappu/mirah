@@ -1,4 +1,4 @@
-import { env } from "./env";
+import { getConfig } from "./config";
 
 // Docs: https://docs.typesafe.ai/api
 // Also works through Vercel AI Gateway, which speaks the same API:
@@ -43,12 +43,13 @@ export async function askJev(
   questions: Record<string, JevQuestion>,
   attempts = 4,
 ): Promise<JevResponse> {
-  if (!process.env.JEV_API_KEY) throw new JevConfigError("JEV_API_KEY is not set");
+  const apiKey = (await getConfig()).jevApiKey;
+  if (!apiKey) throw new JevConfigError("JEV_API_KEY is not set");
   for (let attempt = 1; ; attempt++) {
     const res = await fetch(`${baseUrl()}/v1/systemone`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${env.jevApiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ model: model(), state, questions }),
@@ -62,5 +63,24 @@ export async function askJev(
     }
     // Exponential backoff with jitter, as the docs ask for 429/529.
     await new Promise((r) => setTimeout(r, 500 * 2 ** attempt + Math.random() * 250));
+  }
+}
+
+/** One tiny call so the setup wizard can reject a wrong key before saving it. Null means the key works. */
+export async function checkJevKey(apiKey: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${baseUrl()}/v1/systemone`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: model(),
+        state: "Subject: Test\n\nHello",
+        questions: { ok: { type: "noul", instructions: "Is this a greeting?" } },
+      }),
+    });
+    if (res.status === 401 || res.status === 403) return "Jev rejected this key. Copy it again from TypeSafe.";
+    return null; // Anything else (even a busy server) means the key itself was accepted.
+  } catch {
+    return null; // Can't reach Jev right now; don't block setup on it.
   }
 }

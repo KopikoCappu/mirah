@@ -56,3 +56,6 @@ env.yaml
 # Service account keys
 *.json.key
 sa-key.json
+
+# Template is safe to commit (must come after any .env* rule)
+!.env.example

@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getConfig } from "./config";
 import { env } from "./env";
 
 const COOKIE = "mirah_session";
@@ -34,7 +35,7 @@ export async function currentUser(): Promise<string | null> {
     const { payload } = await jwtVerify(token, secret());
     const email = typeof payload.email === "string" ? payload.email : null;
     // Re-check the allowlist so removing an address revokes access.
-    return email && env.allowedEmails.includes(email) ? email : null;
+    return email && (await getConfig()).allowedEmails.includes(email) ? email : null;
   } catch {
     return null;
   }

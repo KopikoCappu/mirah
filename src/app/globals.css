@@ -1175,3 +1175,63 @@ input:focus {
   font-size: 0.88em;
   overflow-wrap: anywhere;
 }
+
+.step-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.step-badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.step-done .step-badge {
+  background: var(--important-tint);
+  color: var(--important);
+}
+
+.step .pill {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  text-transform: none;
+}
+
+.howto {
+  margin: 10px 0 4px;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+  min-width: 0;
+}
+
+.copy-field code {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  overflow-wrap: anywhere;
+}
+
+.unlock {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}

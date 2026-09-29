@@ -25,6 +25,31 @@ export function SubmitButton({
   );
 }
 
+/** A value shown in full with a one-tap copy button, for pasting into another site's settings. */
+export function CopyField({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <span className="copy-field">
+      <code>{value}</code>
+      <button
+        type="button"
+        className="chip-btn"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          } catch {
+            // Clipboard blocked; the value is still selectable.
+          }
+        }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </span>
+  );
+}
+
 const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 
 /** Formats in the viewer's timezone rather than the server's. */

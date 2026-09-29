@@ -1,4 +1,5 @@
 import { decodeJwt } from "jose";
+import { getConfig } from "./config";
 import { env } from "./env";
 
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.modify";
@@ -26,11 +27,24 @@ async function postForm(url: string, body: Record<string, string>): Promise<Toke
   return (await res.json()) as TokenResponse;
 }
 
+async function googleClient() {
+  const c = await getConfig();
+  if (!c.googleClientId || !c.googleClientSecret) throw new Error("Google sign-in isn't set up yet. Open /setup.");
+  return { id: c.googleClientId, secret: c.googleClientSecret };
+}
+
+async function msClient() {
+  const c = await getConfig();
+  if (!c.msClientId || !c.msClientSecret) throw new Error("Outlook isn't set up yet. Open /setup.");
+  return { id: c.msClientId, secret: c.msClientSecret };
+}
+
 // ---------- Google ----------
 
-export function googleAuthUrl(state: string, withGmail: boolean) {
+export async function googleAuthUrl(state: string, withGmail: boolean) {
+  const client = await googleClient();
   const params = new URLSearchParams({
-    client_id: env.googleClientId,
+    client_id: client.id,
     redirect_uri: googleRedirectUri(),
     response_type: "code",
     scope: withGmail ? `openid email ${GMAIL_SCOPE}` : "openid email",
@@ -46,10 +60,11 @@ export function googleAuthUrl(state: string, withGmail: boolean) {
 }
 
 export async function googleExchangeCode(code: string) {
+  const client = await googleClient();
   const tokens = await postForm("https://oauth2.googleapis.com/token", {
     code,
-    client_id: env.googleClientId,
-    client_secret: env.googleClientSecret,
+    client_id: client.id,
+    client_secret: client.secret,
     redirect_uri: googleRedirectUri(),
     grant_type: "authorization_code",
   });
@@ -61,10 +76,11 @@ export async function googleExchangeCode(code: string) {
 }
 
 export async function googleAccessToken(refreshToken: string) {
+  const client = await googleClient();
   const tokens = await postForm("https://oauth2.googleapis.com/token", {
     refresh_token: refreshToken,
-    client_id: env.googleClientId,
-    client_secret: env.googleClientSecret,
+    client_id: client.id,
+    client_secret: client.secret,
     grant_type: "refresh_token",
   });
   return tokens.access_token;
@@ -72,9 +88,10 @@ export async function googleAccessToken(refreshToken: string) {
 
 // ---------- Microsoft ----------
 
-export function msAuthUrl(state: string) {
+export async function msAuthUrl(state: string) {
+  const client = await msClient();
   const params = new URLSearchParams({
-    client_id: env.msClientId,
+    client_id: client.id,
     redirect_uri: msRedirectUri(),
     response_type: "code",
     response_mode: "query",
@@ -86,10 +103,11 @@ export function msAuthUrl(state: string) {
 }
 
 export async function msExchangeCode(code: string) {
+  const client = await msClient();
   const tokens = await postForm(`${MS_BASE}/token`, {
     code,
-    client_id: env.msClientId,
-    client_secret: env.msClientSecret,
+    client_id: client.id,
+    client_secret: client.secret,
     redirect_uri: msRedirectUri(),
     grant_type: "authorization_code",
     scope: MS_SCOPES,
@@ -105,10 +123,11 @@ export async function msExchangeCode(code: string) {
 
 /** Microsoft rotates refresh tokens, so the caller must store the new one. */
 export async function msAccessToken(refreshToken: string) {
+  const client = await msClient();
   const tokens = await postForm(`${MS_BASE}/token`, {
     refresh_token: refreshToken,
-    client_id: env.msClientId,
-    client_secret: env.msClientSecret,
+    client_id: client.id,
+    client_secret: client.secret,
     grant_type: "refresh_token",
     scope: MS_SCOPES,
   });

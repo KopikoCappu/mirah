@@ -3,6 +3,22 @@
 **The quick way:** run `bash scripts/setup.sh`. On Windows, run it in **Git Bash** (Start menu → Git Bash), not PowerShell. It does everything below and walks you through the one manual step, the OAuth client.
 This page is the manual version, and it's useful for troubleshooting.
 
+**How the pieces fit.** The server itself needs only a few generated values: `SESSION_SECRET`, `TOKEN_ENCRYPTION_KEY`,
+`CRON_SECRET`, the Firestore project, and `APP_URL` (automatic on Vercel). Everything a person types goes in the
+**setup wizard** at `/setup` in the browser and is stored encrypted in Firestore: the Google OAuth client, the Jev key,
+Outlook, and who can sign in.
+Setting any of those as an environment variable (`GOOGLE_CLIENT_ID`, `JEV_API_KEY`, `ALLOWED_EMAILS`, …) still works, and it
+overrides the wizard.
+
+Until someone signs in as the owner, the wizard is locked with a setup key. The script prints a link that contains it.
+If you set up by hand, get the key with:
+
+```bash
+node -e "console.log(require('crypto').createHmac('sha256', process.argv[1]).update('mirah-setup').digest('base64url').slice(0,22))" "$SESSION_SECRET"
+```
+
+Then open `https://<your site>/setup/unlock?key=<that key>`.
+
 About 30–45 minutes, done once. Everything stays inside Google Cloud's free tier at personal volume.
 The commands use Git Bash. In PowerShell, swap `\` line continuations for backticks.
 

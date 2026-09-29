@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
-import { missingConfig } from "@/lib/env";
+import { isUnclaimed } from "@/lib/config";
+import { configProblems } from "@/lib/env";
 import { currentUser } from "@/lib/session";
 import { BrandMark } from "../ui";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  // A fresh deploy lands here first; send it to the checklist instead of a sign-in that would crash.
-  if (missingConfig().length) redirect("/setup");
+  // A fresh deploy lands here first; send it to the setup wizard instead of a sign-in that can't work yet.
+  if (configProblems().length || (await isUnclaimed())) redirect("/setup");
   if (await currentUser()) redirect("/");
   const { error } = await searchParams;
   return (
