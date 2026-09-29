@@ -1,0 +1,39 @@
+:root {
+  --bg: #f7f6f3;
+  --text: #1c1b19;
+  --accent: #2f5bd3;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414;
+    --text: #ecebe8;
+    --accent: #7b9cff;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #141414;
+  --text: #ecebe8;
+  --accent: #7b9cff;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 system-ui, sans-serif;
+}
+
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+a {
+  color: var(--accent);
+}

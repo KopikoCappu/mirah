@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# templates are safe to commit
+!.env.example
+!env.example.yaml
+
+# Cloud Run env vars (contains secrets)
+env.yaml
+
+.vercel
+.env*
+
+# Firebase CLI cache
+.firebase/
+
+# Service account keys
+*.json.key
+sa-key.json

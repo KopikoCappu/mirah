@@ -1,0 +1,13 @@
+# Never upload local secrets; production values live in Vercel's environment variables.
+.env*
+!.env.example
+env.yaml
+*.json.key
+sa-key.json
+
+# Not part of the web app
+site
+Dockerfile
+.dockerignore
+firebase.json
+.firebaserc

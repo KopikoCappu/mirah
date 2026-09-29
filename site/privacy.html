@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mirah Privacy Policy</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <h1>Privacy policy</h1>
+    <p><i>Last updated: September 27, 2026</i></p>
+
+    <p>Mirah is a personal tool used only by its owner to sort their own email. It is not offered to the public.</p>
+
+    <h2>What data Mirah accesses</h2>
+    <p>With the account owner's permission, Mirah reads messages in the connected Gmail and Outlook inboxes:
+      sender, recipients, subject, date, and message body. It can add labels (Gmail) or categories (Outlook)
+      to messages. It never sends, deletes, or archives email.</p>
+
+    <h2>How the data is used</h2>
+    <ul>
+      <li>Each new message's sender, subject, and the first part of its body are sent to TypeSafe's Jev
+        classification API to decide whether the message is important, needs review, or is junk.</li>
+      <li>Mirah stores a short record of each sorted message (sender, subject, a short snippet, the
+        classification, and a link back to the message) in Google Cloud Firestore, so the owner can review it.
+        Full message bodies are not stored.</li>
+      <li>Access tokens for the connected accounts are stored encrypted and are used only to read and label mail.</li>
+    </ul>
+
+    <h2>Sharing</h2>
+    <p>Data is not sold, shared, or used for advertising. It is processed only by the services listed above
+      (Google Cloud, TypeSafe) to provide the sorting feature.</p>
+
+    <h2>Google API Services User Data Policy</h2>
+    <p>Mirah's use and transfer of information received from Google APIs adheres to the
+      <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data
+      Policy</a>, including the Limited Use requirements.</p>
+
+    <h2>Removing access</h2>
+    <p>Access can be revoked at any time from Mirah's settings page, from
+      <a href="https://myaccount.google.com/permissions">Google Account permissions</a>, or from
+      <a href="https://account.live.com/consent/Manage">Microsoft account permissions</a>.
+      Stored records can be deleted on request.</p>
+
+    <h2>Contact</h2>
+    <p>minhtran60524@gmail.com</p>
+  </main>
+</body>
+</html>
