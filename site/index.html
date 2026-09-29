@@ -3,17 +3,285 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mirah</title>
+  <title>Mirah: your inbox, sorted</title>
+  <meta name="description" content="Open-source inbox sorter for Gmail and Outlook. Every email lands in Important, Review, or Junk. Self-hosted, private, and free to run.">
+  <meta property="og:title" content="Mirah: your inbox, sorted">
+  <meta property="og:description" content="Open-source inbox sorter for Gmail and Outlook. Self-hosted, private, and free to run.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121210" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono&family=Instrument+Serif:ital@0;1&display=swap">
   <link rel="stylesheet" href="/style.css">
+
+  <!-- Vercel Web Analytics: enable it under the project's Analytics tab. Not loaded anywhere except Vercel. -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="landing">
+  <header class="nav">
+    <a href="/" class="brand">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true" class="brand-mark">
+        <rect width="32" height="32" rx="9" fill="currentColor"/>
+        <rect x="7" y="9" width="18" height="14" rx="3" fill="none" stroke="var(--bg)" stroke-width="2.4"/>
+        <path d="M8 11.5 16 17l8-5.5" fill="none" stroke="var(--bg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24.5" cy="8.5" r="4" fill="var(--important)" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      Mirah
+    </a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#run">Run your own</a>
+      <a class="button small" href="https://github.com/KopikoCappu/mirah" data-track="GitHub (nav)">GitHub</a>
+    </nav>
+  </header>
+
   <main>
-    <h1>Mirah</h1>
-    <p>Mirah is a personal inbox sorter. It reads new mail in the owner's own Gmail and Outlook
-      accounts and sorts it into <b>Important</b>, <b>Review</b>, and <b>Junk</b>, so important messages
-      such as interviews and job offers are never missed.</p>
-    <p>It is a private, single-user tool and is not offered to the public.</p>
-    <p><a href="/privacy.html">Privacy policy</a></p>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Open source · Gmail &amp; Outlook</p>
+        <h1>Your inbox, <em>sorted.</em></h1>
+        <p class="lede">
+          Every new email lands in <b class="c-important">Important</b>, <b class="c-review">Review</b>, or
+          <b class="c-junk">Junk</b>, so the interview invite never gets buried under a flash sale.
+          It runs in your own cloud account, so nobody else ever sees your mail.
+        </p>
+        <div class="cta">
+          <a class="button primary" href="#run" data-track="Run your own (hero)">Run your own, free</a>
+          <a class="button" href="https://github.com/KopikoCappu/mirah" data-track="GitHub (hero)">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+            View on GitHub
+          </a>
+        </div>
+        <p class="fine">MIT licensed · Fits in Google Cloud's free tier · Never deletes anything</p>
+      </div>
+
+      <div class="demo" aria-label="Example of a sorted inbox">
+        <div class="segmented" role="tablist">
+          <button class="seg seg-important active" role="tab" aria-selected="true" data-bucket="important"><span class="dot"></span>Important <span class="count">3</span></button>
+          <button class="seg seg-review" role="tab" aria-selected="false" data-bucket="review"><span class="dot"></span>Review <span class="count">2</span></button>
+          <button class="seg seg-junk" role="tab" aria-selected="false" data-bucket="junk"><span class="dot"></span>Junk <span class="count">2</span></button>
+        </div>
+
+        <ul class="list bucket-important" data-list="important">
+          <li class="card">
+            <span class="avatar" style="--h:150">NR</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">Northwind Recruiting</span><span class="time">9:41 AM</span></div>
+              <span class="subject">Interview availability for next Tuesday?</span>
+              <p class="snippet">Thanks for applying to the Software Engineer role. We'd love to set up a 45-minute call with the team…</p>
+              <div class="meta"><span class="pill pill-category">Job</span><span class="pill pill-action">Needs action</span><span class="pill pill-urgent">Urgent</span></div>
+            </div>
+          </li>
+          <li class="card">
+            <span class="avatar" style="--h:210">MG</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">Maya Green</span><span class="time">8:15 AM</span></div>
+              <span class="subject">Re: dinner on Friday</span>
+              <p class="snippet">Works for me! Want to try the new place on 5th? I can book for 7.</p>
+              <div class="meta"><span class="pill pill-category">Personal</span><span class="pill pill-action">Needs action</span><span class="why">You've emailed before</span></div>
+            </div>
+          </li>
+          <li class="card">
+            <span class="avatar" style="--h:40">CP</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">City Power &amp; Light</span><span class="time">Yesterday</span></div>
+              <span class="subject">Your bill is ready: $84.20 due Oct 10</span>
+              <p class="snippet">Your September statement is now available. Autopay is off for this account.</p>
+              <div class="meta"><span class="pill pill-category">Bills</span></div>
+            </div>
+          </li>
+        </ul>
+
+        <ul class="list bucket-review" data-list="review" hidden>
+          <li class="card">
+            <span class="avatar" style="--h:280">CV</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">Canvasly</span><span class="time">10:02 AM</span></div>
+              <span class="subject">Your trial ends in 3 days</span>
+              <p class="snippet">Keep your projects and upgrade to Pro, or your workspace will switch to the free plan.</p>
+              <div class="meta"><span class="pill pill-category">Account</span></div>
+            </div>
+          </li>
+          <li class="card">
+            <span class="avatar" style="--h:10">AA</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">Alumni Association</span><span class="time">Mon</span></div>
+              <span class="subject">Fall newsletter + homecoming tickets</span>
+              <p class="snippet">Catch up on campus news, and reserve your spot for homecoming weekend.</p>
+              <div class="meta"><span class="pill pill-category">Newsletter</span></div>
+            </div>
+          </li>
+        </ul>
+
+        <ul class="list bucket-junk" data-list="junk" hidden>
+          <li class="card">
+            <span class="avatar" style="--h:0">?</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">Prize Center</span><span class="time">3:12 AM</span></div>
+              <span class="subject">Congratulations! You've been selected</span>
+              <p class="snippet">Claim your reward within 24 hours by confirming your account details…</p>
+              <p class="scam">Looks like a scam. Don't click links or reply.</p>
+            </div>
+          </li>
+          <li class="card">
+            <span class="avatar" style="--h:320">SH</span>
+            <div class="card-body">
+              <div class="card-head"><span class="sender">ShopHaus</span><span class="time">Sun</span></div>
+              <span class="subject">FLASH SALE: 70% off everything</span>
+              <p class="snippet">Today only. Free shipping on orders over $25.</p>
+              <div class="meta"><span class="pill pill-category">Promotions</span></div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="how" class="section">
+      <h2>How it decides</h2>
+      <p class="section-lede">Missing something important costs more than reading one extra email, so Mirah leans towards Important on purpose.</p>
+      <ol class="steps">
+        <li>
+          <span class="step-num">1</span>
+          <h3>Your rules come first</h3>
+          <p>VIP senders, companies you've applied to, hiring systems like Greenhouse and Lever, keywords like
+            “interview” or “offer letter”, and anyone you've emailed before go straight to Important. Blocked senders go to Junk.</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <h3>Then one quick question to AI</h3>
+          <p>Everything else goes to <a href="https://docs.typesafe.ai/api">Jev</a>, a fast, inexpensive classifier.
+            In a single call it works out the category, whether you need to act, how urgent it is, and whether it looks like a scam.</p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <h3>Cautious sorting</h3>
+          <p>Anything with even a 15% chance of being job-related goes to Important. Junk only gets an email when Jev is
+            at least 90% sure and nothing needs you. If Jev isn't sure, or has an error, the email goes to Review.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="section">
+      <h2>Built to be trusted with your inbox</h2>
+      <div class="features">
+        <div class="feature">
+          <h3>Private by design</h3>
+          <p>You run your own copy, with your own database and your own API key. Your email never passes through anyone else's server.</p>
+        </div>
+        <div class="feature">
+          <h3>Never deletes</h3>
+          <p>Mirah only reads and sorts. It can add <code>Mirah/*</code> labels in Gmail or categories in Outlook, and that's it.</p>
+        </div>
+        <div class="feature">
+          <h3>Learns from you</h3>
+          <p>Move an email with one tap, and Mirah remembers that sender next time.</p>
+        </div>
+        <div class="feature">
+          <h3>Shows its accuracy</h3>
+          <p>An Accuracy page tracks every correction: what it missed, and what it wrongly sent to Junk.</p>
+        </div>
+        <div class="feature">
+          <h3>On your phone</h3>
+          <p>Install it to your home screen from Safari or Chrome. It works like an app, without an app store.</p>
+        </div>
+        <div class="feature">
+          <h3>Free to run</h3>
+          <p>At personal volume, it fits in Google Cloud's and Vercel's free tiers. You only pay Jev for classifying email, a fraction of a cent each.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="run" class="section">
+      <h2>Run your own</h2>
+      <p class="section-lede">One script sets up the Google Cloud database, generates secrets, and deploys to Vercel or Cloud Run.
+        Most of the time goes into clicking through Google's sign-in setup, and the script walks you through it.</p>
+      <div class="terminal">
+        <button class="copy" type="button" data-copy="git clone https://github.com/KopikoCappu/mirah.git
+cd mirah
+npm install
+bash scripts/setup.sh">Copy</button>
+<pre><code><span class="prompt">$</span> git clone https://github.com/KopikoCappu/mirah.git
+<span class="prompt">$</span> cd mirah
+<span class="prompt">$</span> npm install
+<span class="prompt">$</span> bash scripts/setup.sh</code></pre>
+      </div>
+      <p class="fine">You'll need: a Google account, <a href="https://nodejs.org">Node.js</a>, the
+        <a href="https://cloud.google.com/sdk/docs/install">gcloud CLI</a>, and a
+        <a href="https://docs.typesafe.ai/api">Jev API key</a>. On Windows, run it in Git Bash.
+        Prefer to do it by hand? Read <a href="https://github.com/KopikoCappu/mirah/blob/main/SETUP.md">SETUP.md</a>.</p>
+    </section>
+
+    <section class="section faq">
+      <h2>Questions</h2>
+      <details>
+        <summary>Why do I have to host it myself?</summary>
+        <p>Reading Gmail is a “restricted” permission. A shared hosted service would need Google's paid security audit, and
+          would have to hold thousands of people's email. With your own copy, your mail stays in your own account.</p>
+      </details>
+      <details>
+        <summary>Do I need to know how to code?</summary>
+        <p>No. You need to be comfortable pasting commands into a terminal. The setup script tells you what to click, and your
+          deployment's <code>/setup</code> page lists anything that's still missing.</p>
+      </details>
+      <details>
+        <summary>Will Google show a warning?</summary>
+        <p>Yes, once. Since it's your own personal app, Google says it “hasn't verified this app”. You click through it one
+          time, and the connection keeps working.</p>
+      </details>
+      <details>
+        <summary>What does Jev see?</summary>
+        <p>The sender, subject, and the first part of each new email that your rules didn't already sort. Full email bodies aren't stored anywhere.</p>
+      </details>
+    </section>
   </main>
+
+  <footer class="footer">
+    <span>Mirah · MIT License</span>
+    <nav>
+      <a href="https://github.com/KopikoCappu/mirah">GitHub</a>
+      <a href="/privacy.html">Privacy</a>
+    </nav>
+  </footer>
+
+  <script>
+    // Bucket tabs in the demo inbox.
+    document.querySelectorAll(".demo .seg").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".demo .seg").forEach((t) => {
+          const on = t === tab;
+          t.classList.toggle("active", on);
+          t.setAttribute("aria-selected", String(on));
+        });
+        document.querySelectorAll(".demo [data-list]").forEach((l) => {
+          l.hidden = l.dataset.list !== tab.dataset.bucket;
+        });
+        window.va("event", { name: "Demo tab", data: { bucket: tab.dataset.bucket } });
+      });
+    });
+
+    // Copy the quickstart commands.
+    document.querySelectorAll("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy);
+          btn.textContent = "Copied";
+        } catch {
+          btn.textContent = "Select and copy";
+        }
+        setTimeout(() => (btn.textContent = "Copy"), 1600);
+        window.va("event", { name: "Copy quickstart" });
+      });
+    });
+
+    // Custom events show up in Vercel Analytics on Pro plans; page views work on every plan.
+    document.querySelectorAll("[data-track]").forEach((el) => {
+      el.addEventListener("click", () => window.va("event", { name: el.dataset.track }));
+    });
+  </script>
 </body>
 </html>
